@@ -9,7 +9,7 @@ Apresentar a quantidade de produtos vendidos de determinado elemento e o total;
 
  */
 public class programa {
-    public static void main(String[] args){
+    public static void main(String[] args) throws Exception {
 
 
         Caixa caixa = new Caixa();
