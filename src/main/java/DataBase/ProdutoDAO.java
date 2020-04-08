@@ -1,6 +1,7 @@
 package DataBase;
 
 
+import ProdutoDAOExceptions.*;
 import Projeto_Controle_de_Estoque.Produto;
 
 import java.sql.Connection;
@@ -18,6 +19,7 @@ public class ProdutoDAO  {
             this.connection = connection;
             connection.setAutoCommit(false);
         }catch (SQLException e){
+            new ConnectionException("Falha ao obter conexão com banco de dados! \nGentileza tentar novamente mais tarde.");
             e.printStackTrace();
         }
     }
@@ -35,6 +37,7 @@ public class ProdutoDAO  {
             connection.commit(); //comitando alterações
 
         }catch (SQLException e) {
+            new AdcionaException("Falha ao adicionar produto no banco de dados! \nGentileza tentar novamente mais tarde.");
             e.printStackTrace();
             try {
                 connection.rollback(); //refazendo alterações
@@ -57,13 +60,65 @@ public class ProdutoDAO  {
             }
 
         } catch (SQLException e) {
+            new LerException("Falha ao fazer leitura no banco de dados! \nGentileza tentar novamente mais tarde.");
             e.printStackTrace();
         }
 
     }
 
-    //public static void atualizar()
+    public static void atualizarPreco(Double preço, String Id){
 
+        try{
+            PreparedStatement preparedStatement = connection.prepareStatement("UPDATE PRODUTOS SET PRECO = ? WHERE ID = ?");
 
-    //public static void deletar(int categoriaId, int qtd)
+            preparedStatement.setDouble(1,preço);
+            preparedStatement.setString(2,Id);
+            preparedStatement.execute();
+            connection.commit();
+
+        }catch (SQLException e){
+            new UpdateException("Falha ao atualizar dados! \nGentileza tenta novamente mais tarde.");
+            try {
+                connection.rollback();
+            }catch (SQLException ex){
+                ex.printStackTrace();
+            }
+        }
+    }
+
+    public static void atualizarQuantidade(int id, int qtd){
+
+        try{
+            PreparedStatement preparedStatement = connection.prepareStatement("UPDATE PRODUTOS SET QUANTIDADE = ? WHERE ID = ?");
+            preparedStatement.setInt(1,qtd);
+            preparedStatement.setInt(2,id);
+
+            preparedStatement.execute();
+
+            connection.commit();
+
+        }catch (SQLException e){
+            new UpdateException("Falha ao atualizar dados. \nGentileza tente novamente mais tarde.");
+            e.printStackTrace();
+
+            try{
+                connection.rollback();
+            }catch (SQLException ex){
+                ex.printStackTrace();
+            }
+        }
+    }
+
+    public static void deletar(){
+        try{
+            PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM ID WHERE QUANTIDADE = 0");
+            preparedStatement.execute();
+
+            connection.commit();
+
+        }catch (SQLException e){
+            new DeletarException("Falha ao deletar itens do banco de dados! \nGentileza tente novamente mais tarde.");
+        }
+
+    }
 }
