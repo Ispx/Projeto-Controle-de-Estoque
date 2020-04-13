@@ -1,5 +1,11 @@
 C:\Users\isaqu\eclipse-workspace\poi\src\main\java\DataBase\ConnectionFactory.java
+C:\Users\isaqu\eclipse-workspace\poi\src\main\java\Exceptions\DeletarException.java
+C:\Users\isaqu\eclipse-workspace\poi\src\main\java\Exceptions\ConnectionException.java
 C:\Users\isaqu\eclipse-workspace\poi\src\main\java\DataBase\ProdutoDAO.java
+C:\Users\isaqu\eclipse-workspace\poi\src\main\java\Exceptions\PropertiesException.java
 C:\Users\isaqu\eclipse-workspace\poi\src\main\java\Projeto_Controle_de_Estoque\CriarArquivo.java
 C:\Users\isaqu\eclipse-workspace\poi\src\main\java\Projeto_Controle_de_Estoque\Produto.java
+C:\Users\isaqu\eclipse-workspace\poi\src\main\java\Exceptions\AdcionaException.java
 C:\Users\isaqu\eclipse-workspace\poi\src\main\java\Projeto_Controle_de_Estoque\programa.java
+C:\Users\isaqu\eclipse-workspace\poi\src\main\java\Exceptions\LerException.java
+C:\Users\isaqu\eclipse-workspace\poi\src\main\java\Exceptions\UpdateException.java

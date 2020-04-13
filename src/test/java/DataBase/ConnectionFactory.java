@@ -1,10 +1,13 @@
 package DataBase;
 
+import Exceptions.ConnectionException;
+import Exceptions.PropertiesException;
 import com.mchange.v2.c3p0.ComboPooledDataSource;
 
 import java.io.FileReader;
 import java.io.IOException;
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.Properties;
 
 public class ConnectionFactory implements AutoCloseable{
@@ -36,31 +39,33 @@ public class ConnectionFactory implements AutoCloseable{
     public Connection getConnection() {
         try {
             return comboPooledDataSource.getConnection();
-        }catch (Exception e){
+        }catch (SQLException e){
+            e = new ConnectionException("Falha ao obter conexão! \nGentileza verificar propriedades de conexão.");
             System.out.println(e.getMessage());
+            e.printStackTrace();
         }
         return null;
     }
 
     @Override
     public void close(){
-        try {
-            if (comboPooledDataSource != null) {
-                comboPooledDataSource.close();
-            }
-
-        }catch (Exception e){
-            e.printStackTrace();
+        if (comboPooledDataSource != null) {
+            comboPooledDataSource.close();
         }
+
+
+
     }
 
     private Properties properties(){
         Properties properties = new Properties();
         try {
             properties.load(new FileReader("C:\\Users\\isaqu\\OneDrive\\Área de Trabalho\\Alura\\propriedadesdb.txt"));
-        } catch (IOException e) {
+        } catch (PropertiesException e) {
+            e = new PropertiesException("Falha ao obter propriedades de conexão! \nGentileza verificar.");
             System.out.println(e.getMessage());
-            e.printStackTrace();
+        }catch (IOException exx){
+            exx.printStackTrace();
         }
         return properties;
     }

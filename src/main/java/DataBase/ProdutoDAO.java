@@ -1,15 +1,12 @@
 package DataBase;
 
 
-import ProdutoDAOExceptions.*;
-import Projeto_Controle_de_Estoque.Produto;
+import Classes.Produto;
+import Exceptions.*;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 
-public class ProdutoDAO  {
+public class ProdutoDAO  implements AutoCloseable{
     private static Connection connection = null;
 
 
@@ -19,8 +16,8 @@ public class ProdutoDAO  {
             this.connection = connection;
             connection.setAutoCommit(false);
         }catch (SQLException e){
-            new ConnectionException("Falha ao obter conexão com banco de dados! \nGentileza tentar novamente mais tarde.");
-            e.printStackTrace();
+           e = new ConnectionException("Falha ao obter conexão com banco de dados! \nGentileza tentar novamente mais tarde.");
+           e.printStackTrace();
         }
     }
 
@@ -37,7 +34,7 @@ public class ProdutoDAO  {
             connection.commit(); //comitando alterações
 
         }catch (SQLException e) {
-            new AdcionaException("Falha ao adicionar produto no banco de dados! \nGentileza tentar novamente mais tarde.");
+            e = new AdcionaException("Falha ao adicionar produto no banco de dados! \nGentileza tentar novamente mais tarde.");
             e.printStackTrace();
             try {
                 connection.rollback(); //refazendo alterações
@@ -53,31 +50,56 @@ public class ProdutoDAO  {
 
         try{
             PreparedStatement preparedStatement = connection.prepareStatement(sql);
+            preparedStatement.execute();
+
+            connection.commit();
             ResultSet resultSet = preparedStatement.getResultSet();
 
             while(resultSet.next()){
-                System.out.println("CategoriaId: " + resultSet.getInt("CATEGORIA_ID") + " Nome: " + resultSet.getString("NOME") + " Preço: R$ " + resultSet.getDouble("PRECO"));
+                System.out.println("ID: " + resultSet.getInt("ID") + " CategoriaId: " + resultSet.getInt("CATEGORIA_ID") + " Nome: " + resultSet.getString("NOME") + " Preço: R$ " + resultSet.getDouble("PRECO") + "Qtd: " + resultSet.getInt("QUANTIDADE"));
             }
 
         } catch (SQLException e) {
-            new LerException("Falha ao fazer leitura no banco de dados! \nGentileza tentar novamente mais tarde.");
+            e = new LerException("Falha ao fazer leitura no banco de dados! \nGentileza verificar e tentar novamente.");
             e.printStackTrace();
         }
 
     }
 
-    public static void atualizarPreco(Double preço, String Id){
+    public void consultaProdutos() {
+        try {
+
+            PreparedStatement preparedStatement = connection.prepareStatement("SELECT PRODUTOS.ID, CATEGORIAS.NOME_CTG, PRODUTOS.NOME, " +
+                    "AVG(PRECO) AS PRECO_MEDIO, SUM(QUANTIDADE) AS QTD_TOTAL, " +
+                    "SUM(QUANTIDADE) * SUM(PRECO) AS TOTAL FROM PRODUTOS " +
+                    "INNER JOIN CATEGORIAS ON CATEGORIAS.ID=PRODUTOS.CATEGORIA_ID GROUP BY CATEGORIAS.ID,CATEGORIAS.NOME_CTG,PRODUTOS.NOME");
+
+            preparedStatement.execute();
+            ResultSet resultSet = preparedStatement.getResultSet();
+
+            while(resultSet.next()){
+                System.out.println("ID: " + resultSet.getInt("ID") + " - CATEGORIA: " + resultSet.getString("NOME_CTG") +
+                        " - PRODUTO: " + resultSet.getString("NOME") + " - PREÇO MÉDIO: R$ " + resultSet.getDouble("PRECO_MEDIO") +
+                        " - QTD TOTAL: " + resultSet.getInt("QTD_TOTAL") + " - TOTAL: R$ " + resultSet.getDouble("TOTAL"));
+            }
+        }catch(SQLException e){
+                e = new LerException("Falha ao fazer consulta no banco de dados! \nGentileza verificar e tentar novamenteo!");
+            }
+        }
+
+    public static void atualizarPreco(Double preco, String Id){
 
         try{
             PreparedStatement preparedStatement = connection.prepareStatement("UPDATE PRODUTOS SET PRECO = ? WHERE ID = ?");
 
-            preparedStatement.setDouble(1,preço);
+            preparedStatement.setDouble(1,preco);
             preparedStatement.setString(2,Id);
             preparedStatement.execute();
             connection.commit();
 
         }catch (SQLException e){
-            new UpdateException("Falha ao atualizar dados! \nGentileza tenta novamente mais tarde.");
+            e = new UpdateException("Falha ao atualizar dados! \nGentileza tenta novamente mais tarde.");
+            e.printStackTrace();
             try {
                 connection.rollback();
             }catch (SQLException ex){
@@ -86,7 +108,7 @@ public class ProdutoDAO  {
         }
     }
 
-    public static void atualizarQuantidade(int id, int qtd){
+    public void atualizarQuantidade(int id, int qtd){
 
         try{
             PreparedStatement preparedStatement = connection.prepareStatement("UPDATE PRODUTOS SET QUANTIDADE = ? WHERE ID = ?");
@@ -94,11 +116,12 @@ public class ProdutoDAO  {
             preparedStatement.setInt(2,id);
 
             preparedStatement.execute();
-
+            deletar();
             connection.commit();
 
+
         }catch (SQLException e){
-            new UpdateException("Falha ao atualizar dados. \nGentileza tente novamente mais tarde.");
+            e = new UpdateException("Falha ao atualizar dados. \nGentileza tente novamente mais tarde.");
             e.printStackTrace();
 
             try{
@@ -109,16 +132,41 @@ public class ProdutoDAO  {
         }
     }
 
-    public static void deletar(){
+    private void deletar(){
         try{
-            PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM ID WHERE QUANTIDADE = 0");
+            PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM PRODUTOS WHERE QUANTIDADE = 0");
             preparedStatement.execute();
 
             connection.commit();
 
         }catch (SQLException e){
-            new DeletarException("Falha ao deletar itens do banco de dados! \nGentileza tente novamente mais tarde.");
+            e = new DeletarException("Falha ao deletar itens do banco de dados! \nGentileza tente novamente mais tarde.");
+            e.printStackTrace();
         }
 
+    }
+
+    public void deletar(int id){
+        try{
+            PreparedStatement preparedStatement = connection.prepareStatement("DELETE FROM PRODUTOS WHERE id = ?");
+            preparedStatement.setInt(1,id);
+            preparedStatement.execute();
+
+            connection.commit();
+
+        }catch (SQLException e){
+            e = new DeletarException("Falha ao deletar itens do banco de dados! \nGentileza tente novamente mais tarde.");
+            e.printStackTrace();
+        }
+
+    }
+
+    @Override
+    public void close() throws Exception {
+        try{
+            connection.close();
+        }catch (SQLException e){
+            e.printStackTrace();
+        }
     }
 }
